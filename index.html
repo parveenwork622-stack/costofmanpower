@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Anand Garments – Packaging Manpower Cost Analyzer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0d0d0f;--surface:#141418;--card:#1a1a20;--border:#2a2a35;--accent:#f5a623;--accent2:#e85d04;--green:#22c55e;--blue:#3b82f6;--text:#f0f0f0;--muted:#7a7a8a}
+    body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh}
+    .dash{padding:20px;max-width:1200px;margin:0 auto}
+    .header{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+    .header-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+    .header h1{font-size:22px;font-weight:700;letter-spacing:1px;color:var(--accent)}
+    .header p{font-size:12px;color:var(--muted);font-family:'Roboto Mono',monospace}
+    .scene-box{background:#1a1208;border:1px solid #3a2a00;border-radius:12px;padding:12px;margin-bottom:20px}
+    .scene-label{font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+    canvas#scene{width:100%;height:200px;display:block;border-radius:8px;background:#110e08}
+    .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .25s;background:var(--surface);margin-bottom:20px;position:relative}
+    .upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:#1a1500}
+    .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .upload-zone p{font-size:15px;color:var(--muted)}
+    .upload-zone span{color:var(--accent);font-weight:600}
+    .toolbar{display:flex;gap:12px;justify-content:flex-end;margin-bottom:16px;flex-wrap:wrap}
+    .toolbar button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:20px;font-family:'Roboto Mono',monospace;font-size:11px;cursor:pointer;transition:all 0.2s}
+    .toolbar button:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+    .metric{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 14px;overflow:hidden}
+    .metric-label{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'Roboto Mono',monospace;margin-bottom:8px}
+    .metric-val{font-size:22px;font-weight:700;font-family:'Roboto Mono',monospace;line-height:1.2;word-break:break-word}
+    .metric-val.gold{color:var(--accent)}.metric-val.green{color:var(--green)}.metric-val.blue{color:var(--blue)}
+    .metric-sub{font-size:11px;color:var(--muted);margin-top:5px}
+    .table-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+    .table-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+    .table-head h3{font-size:14px;letter-spacing:1px;color:var(--accent)}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{background:#111115;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+    td{padding:10px 14px;border-bottom:1px solid #1e1e28;color:var(--text);font-family:'Roboto Mono',monospace;font-size:12px}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#1f1f2a}
+    .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:#1e1500;color:var(--accent);border:1px solid #3a2a00}
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+    .chart-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .chart-box h3{font-size:12px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'Roboto Mono',monospace;margin-bottom:12px}
+    .empty{text-align:center;padding:50px 20px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:10px}
+    .ticker{background:#0a0a0c;border-top:1px solid var(--border);padding:8px 16px;font-family:'Roboto Mono',monospace;font-size:11px;color:var(--accent);white-space:nowrap;overflow:hidden;border-radius:0 0 12px 12px;position:relative}
+    .ticker-inner{display:inline-block;white-space:nowrap}
+    .loading{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:'Rajdhani';backdrop-filter:blur(4px);visibility:hidden}
+    .loading.active{visibility:visible}
+    .loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .error-msg{background:#330000;border-left:4px solid #ff4444;padding:12px;margin-bottom:16px;border-radius:8px;font-size:13px;display:none}
+    @media(max-width:600px){.charts-row{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+<div class="dash">
+  <div class="header">
+    <div class="header-icon">📦</div>
+    <div><h1>PACKAGING MANPOWER COST</h1><p>ANAND GARMENTS PVT LTD · ₹400/WORKER/DAY</p></div>
+  </div>
+
+  <div class="scene-box">
+    <div class="scene-label">🏭 Live Packing Floor — Anand Garments Pvt Ltd</div>
+    <canvas id="scene"></canvas>
+  </div>
+
+  <div class="upload-zone" id="dropZone">
+    <input type="file" id="csvFile" accept=".csv">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="1.5" style="margin:0 auto 10px;display:block;opacity:.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <p>CSV file yahan drop karein ya <span>click karke select karein</span></p>
+    <p style="font-size:11px;color:#555;margin-top:6px">Required columns: Date, Customer, PO, Item, Qty, Manpower Count, Supervisor</p>
+  </div>
+
+  <div class="toolbar">
+    <button id="sampleCsvBtn">📄 Sample CSV Download</button>
+    <button id="exportReportBtn">📎 Export Report CSV</button>
+  </div>
+
+  <div id="errorBox" class="error-msg"></div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Total Records</div><div class="metric-val blue" id="mRecords">—</div><div class="metric-sub">valid entries</div></div>
+    <div class="metric"><div class="metric-label">Total Workers</div><div class="metric-val gold" id="mWorkers">—</div><div class="metric-sub">manpower sum</div></div>
+    <div class="metric"><div class="metric-label">Total Cost</div><div class="metric-val gold" id="mCost">—</div><div class="metric-sub">@ ₹400/day</div></div>
+    <div class="metric"><div class="metric-label">Total Qty</div><div class="metric-val green" id="mQty">—</div><div class="metric-sub">items packed</div></div>
+    <div class="metric"><div class="metric-label">Avg Cost/Day</div><div class="metric-val blue" id="mAvg">—</div><div class="metric-sub">per unique date</div></div>
+    <div class="metric"><div class="metric-label">Supervisors</div><div class="metric-val green" id="mSup">—</div><div class="metric-sub">unique</div></div>
+  </div>
+
+  <div class="charts-row" id="chartsRow" style="display:none">
+    <div class="chart-box"><h3>Cost by Date (all dates)</h3><div style="position:relative;height:200px"><canvas id="chartDate"></canvas></div></div>
+    <div class="chart-box"><h3>Workers by Supervisor</h3><div style="position:relative;height:200px"><canvas id="chartSup"></canvas></div></div>
+  </div>
+
+  <div class="table-box">
+    <div class="table-head"><h3>ENTRY LOG</h3><span style="font-size:11px;color:var(--muted)" id="rowCount">Waiting for CSV...</span></div>
+    <div class="table-wrap">
+      <div class="empty" id="emptyState"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f5a623"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><p>CSV upload karein — data yahan dikhega</p></div>
+      <table id="dataTable" style="display:none"><thead><tr><th>Date</th><th>Customer</th><th>PO #</th><th>Item</th><th>Qty</th><th>Workers</th><th>Supervisor</th><th>Cost (₹)</th></tr></thead><tbody id="tableBody"></tbody></table>
+    </div>
+    <div class="ticker" id="ticker" style="display:none"><span class="ticker-inner" id="tickerText"></span></div>
+  </div>
+</div>
+<div class="loading" id="loadingOverlay"><div class="loading-spinner"></div><div>Processing CSV...</div></div>
+
+<script>
+const RATE = 400;
+let rows = [];
+let chartDate = null, chartSup = null;
+
+// ---------- CANVAS SCENE (fixed: single table, dynamic workers, preserve phases) ----------
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+let workers = [];
+let frameId = null;
+let beltOffset = 0, frameN = 0;
+let staticBackgroundCanvas = null; // offscreen for static parts
+
+const SKIN_TONES = ['#c68642','#8d5524','#f1c27d','#a0522d','#d2956a','#7a4f2e','#e0ac69','#b87c4f'];
+const SHIRT_COLORS = ['#2563eb','#dc2626','#16a34a','#7c3aed','#0891b2','#d97706','#db2777','#4f46e5'];
+const PANT_COLORS = ['#374151','#1e3a5f','#292524','#1f2937','#3b1f1f','#1a2e1a','#2d2d2d','#0f172a'];
+
+function resizeAndReposition(keepPhase = true) {
+  const W = canvas.parentElement.clientWidth;
+  canvas.width = Math.max(500, W);
+  canvas.height = 200;
+  const newCount = Math.min(12, Math.max(4, Math.floor((canvas.width - 80) / 85)));
+  if (workers.length !== newCount || !keepPhase) {
+    const oldPhases = workers.map(w => w.phase);
+    const oldSpeeds = workers.map(w => w.speed);
+    workers = [];
+    const spacing = (canvas.width - 80) / (newCount - 1);
+    for (let i = 0; i < newCount; i++) {
+      workers.push({
+        x: 40 + i * spacing,
+        skin: SKIN_TONES[i % SKIN_TONES.length],
+        shirt: SHIRT_COLORS[i % SHIRT_COLORS.length],
+        pant: PANT_COLORS[i % PANT_COLORS.length],
+        phase: keepPhase && oldPhases[i] !== undefined ? oldPhases[i] : (i / newCount) * Math.PI * 2,
+        speed: keepPhase && oldSpeeds[i] !== undefined ? oldSpeeds[i] : (0.018 + (i % 4) * 0.005),
+      });
+    }
+  } else {
+    // just reposition X
+    const spacing = (canvas.width - 80) / (workers.length - 1);
+    workers.forEach((w, idx) => { w.x = 40 + idx * spacing; });
+  }
+  // rebuild static background offscreen
+  buildStaticBackground();
+}
+
+function buildStaticBackground() {
+  if (!canvas) return;
+  staticBackgroundCanvas = document.createElement('canvas');
+  staticBackgroundCanvas.width = canvas.width;
+  staticBackgroundCanvas.height = canvas.height;
+  const sCtx = staticBackgroundCanvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  sCtx.fillStyle = '#110e08';
+  sCtx.fillRect(0, 0, W, H);
+  // brick wall
+  const wallH = Math.floor(H * 0.58);
+  sCtx.fillStyle = '#1e1610';
+  sCtx.fillRect(0, 0, W, wallH);
+  const brickH = 14, brickW = 36, mortarV = 2, mortarH = 2;
+  for (let row = 0; row * (brickH + mortarV) < wallH; row++) {
+    const offsetX = (row % 2) * (brickW / 2);
+    const by = row * (brickH + mortarV);
+    for (let col = -1; col * (brickW + mortarH) < W + brickW; col++) {
+      const bx = offsetX + col * (brickW + mortarH);
+      const shade = 28 + ((row * 7 + col * 13) % 10);
+      sCtx.fillStyle = `rgb(${shade+8},${shade-2},${shade-8})`;
+      sCtx.fillRect(bx, by, brickW, brickH);
+    }
+  }
+  sCtx.strokeStyle = '#0f0c08';
+  sCtx.lineWidth = mortarV;
+  for (let row = 1; row * (brickH + mortarV) < wallH; row++) {
+    sCtx.beginPath();
+    sCtx.moveTo(0, row * (brickH + mortarV) - 1);
+    sCtx.lineTo(W, row * (brickH + mortarV) - 1);
+    sCtx.stroke();
+  }
+  // signboard
+  const signW = Math.min(W * 0.82, 620);
+  const signX = (W - signW) / 2;
+  const signY = 10, signH = 44;
+  sCtx.fillStyle = 'rgba(255,230,160,0.07)';
+  sCtx.fillRect(signX - 6, signY - 4, signW + 12, signH + 8);
+  sCtx.strokeStyle = 'rgba(255,200,80,0.18)';
+  sCtx.strokeRect(signX - 6, signY - 4, signW + 12, signH + 8);
+  sCtx.font = `bold ${Math.min(26, signW/18)}px 'Rajdhani', sans-serif`;
+  sCtx.textAlign = 'center';
+  sCtx.textBaseline = 'middle';
+  sCtx.fillStyle = 'rgba(80,40,0,0.5)';
+  sCtx.fillText('ANAND GARMENTS PVT LTD', W/2 + 2, signY + signH/2 + 2);
+  sCtx.fillStyle = 'rgba(245,180,60,0.72)';
+  sCtx.fillText('ANAND GARMENTS PVT LTD', W/2, signY + signH/2);
+  sCtx.fillStyle = 'rgba(255,230,140,0.18)';
+  sCtx.fillText('ANAND GARMENTS PVT LTD', W/2, signY + signH/2 - 1);
+  sCtx.restore();
+  // floor
+  const floorY = H - 25;
+  sCtx.fillStyle = '#2a2218';
+  sCtx.fillRect(0, floorY, W, 25);
+  sCtx.strokeStyle = '#332c20';
+  sCtx.lineWidth = 0.5;
+  for (let fx = 0; fx < W; fx += 50) {
+    sCtx.beginPath();
+    sCtx.moveTo(fx, floorY);
+    sCtx.lineTo(fx, H);
+    sCtx.stroke();
+  }
+  // ---- ONE SHARED PACKING TABLE (fix) ----
+  const tableY = floorY - 42;
+  const tableW = W - 40;
+  sCtx.fillStyle = '#5c3d1e';
+  sCtx.fillRect(20, tableY, tableW, 8);
+  sCtx.fillStyle = '#3d2710';
+  for (let leg = 30; leg < W; leg += 70) {
+    sCtx.fillRect(leg - 4, tableY + 8, 6, 16);
+  }
+  // belt line
+  const beltY = wallH - 6;
+  sCtx.fillStyle = '#1a1a14';
+  sCtx.fillRect(0, beltY, W, 14);
+}
+
+function drawWorker(w, floorY, tableY) {
+  const { x, skin, shirt, pant, phase } = w;
+  const cycle = phase % (Math.PI * 2);
+  const packT = Math.sin(cycle);
+  const footY = floorY, kneeY = footY - 22, hipY = footY - 42;
+  const shouldY = hipY - 26, neckY = shouldY - 4, headY = neckY - 10;
+  const leanX = packT * 10, leanY = packT * 4;
+  const boxW = 28, boxH = 20;
+  const boxX = x + leanX - boxW / 2, boxY = tableY - boxH;
+  ctx.save();
+  // draw box
+  ctx.fillStyle = '#c8922a';
+  ctx.strokeStyle = '#8a6010';
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
+  ctx.strokeStyle = '#f5e070';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(boxX, boxY + boxH * 0.4);
+  ctx.lineTo(boxX + boxW * (0.3 + Math.sin(cycle * 2) * 0.5), boxY + boxH * 0.4);
+  ctx.stroke();
+  const flapAngle = Math.max(0, -packT) * 0.6;
+  ctx.fillStyle = '#e0a830';
+  ctx.save();
+  ctx.translate(boxX + boxW/2, boxY);
+  ctx.rotate(-flapAngle);
+  ctx.fillRect(-boxW/2, -8, boxW, 8);
+  ctx.restore();
+  // body
+  const hx = x + leanX*0.3, hy = hipY - leanY*0.3;
+  const sx = x + leanX*0.6, sy = shouldY - leanY*0.6;
+  const nx = x + leanX*0.7, ny = neckY - leanY*0.7;
+  const hdx= x + leanX*0.8, hdy= headY - leanY;
+  ctx.strokeStyle = pant;
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx-4,hy); ctx.lineTo(x-5,kneeY); ctx.lineTo(x-4,footY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx+4,hy); ctx.lineTo(x+5,kneeY); ctx.lineTo(x+4,footY); ctx.stroke();
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.ellipse(x-4,footY+1,7,3,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+4,footY+1,7,3,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = shirt;
+  ctx.lineWidth = 10;
+  ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(sx,sy); ctx.stroke();
+  const raReach = packT * 0.8;
+  const rHandX = sx+14+leanX*0.4+raReach*10, rHandY = sy+14+raReach*6;
+  ctx.strokeStyle = shirt;
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(sx+5,sy+2); ctx.quadraticCurveTo(sx+16,sy+8,rHandX,rHandY); ctx.stroke();
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(rHandX,rHandY,4,0,Math.PI*2); ctx.fill();
+  const laReach = Math.cos(cycle)*0.5;
+  const lHandX = sx-14+leanX*0.2+laReach*6, lHandY = sy+14+Math.abs(laReach)*4;
+  ctx.beginPath(); ctx.moveTo(sx-5,sy+2); ctx.quadraticCurveTo(sx-14,sy+8,lHandX,lHandY); ctx.stroke();
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(lHandX,lHandY,4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = skin;
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(nx,ny); ctx.lineTo(nx,ny-6); ctx.stroke();
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(hdx,hdy,10,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = (w.phase*137%3>1)?'#1a0a00':'#3d2200';
+  ctx.beginPath(); ctx.arc(hdx,hdy-3,10,Math.PI,0); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.ellipse(hdx-3,hdy+1,2,1.5,0.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(hdx+3,hdy+1,2,1.5,-0.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(hdx-3,hdy+1.5,1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hdx+3,hdy+1.5,1,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawScene() {
+  if (!canvas || !ctx) return;
+  if (!staticBackgroundCanvas || staticBackgroundCanvas.width !== canvas.width) buildStaticBackground();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(staticBackgroundCanvas, 0, 0);
+  const W = canvas.width, H = canvas.height;
+  const floorY = H - 25;
+  const tableY = floorY - 42;
+  // animated belt
+  beltOffset = (beltOffset + 0.8) % 30;
+  const beltY = Math.floor(H * 0.58) - 6;
+  ctx.strokeStyle = '#3a3a28';
+  ctx.lineWidth = 1;
+  for (let bx = -beltOffset; bx < W; bx += 30) {
+    ctx.beginPath(); ctx.moveTo(bx, beltY); ctx.lineTo(bx, beltY+14); ctx.stroke();
+  }
+  // floating dust
+  ctx.fillStyle = 'rgba(200,180,120,0.10)';
+  for(let d=0; d<8; d++){
+    const px = (W*0.13*d+frameN*0.5) % W;
+    const py = 55 + (Math.sin(frameN*0.02+d)*0.5+0.5)*(H*0.35);
+    ctx.beginPath(); ctx.arc(px,py,1+(d%3)*0.5,0,Math.PI*2); ctx.fill();
+  }
+  workers.forEach(w => { w.phase += w.speed; drawWorker(w, floorY, tableY); });
+  frameN++;
+  frameId = requestAnimationFrame(drawScene);
+}
+
+function initCanvas() {
+  resizeAndReposition(true);
+  drawScene();
+}
+window.addEventListener('resize', () => { resizeAndReposition(true); });
+initCanvas();
+
+// ---------- CSV processing (PapaParse robust, loading, validation) ----------
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('csvFile');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const errorBox = document.getElementById('errorBox');
+
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.style.display = 'block';
+  setTimeout(() => { errorBox.style.display = 'none'; }, 5000);
+}
+
+function showLoading(show) {
+  if (show) loadingOverlay.classList.add('active');
+  else loadingOverlay.classList.remove('active');
+}
+
+function parseCSV(file) {
+  showLoading(true);
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => h.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+    complete: (results) => {
+      showLoading(false);
+      if (results.errors.length) console.warn('Parsing warnings', results.errors);
+      const data = results.data;
+      if (!data || data.length === 0) { showError('CSV file is empty.'); return; }
+      const headers = Object.keys(data[0]);
+      const findCol = (possible) => possible.find(p => headers.includes(p));
+      const dateCol = findCol(['date', 'order_date', 'day']);
+      const custCol = findCol(['customer', 'customer_name', 'client']);
+      const poCol = findCol(['po', 'po_number', 'purchase_order']);
+      const itemCol = findCol(['item', 'product', 'style']);
+      const qtyCol = findCol(['qty', 'quantity', 'pack_qty']);
+      const manCol = findCol(['manpower', 'worker_count', 'workers', 'manpower_count']);
+      const supCol = findCol(['supervisor', 'supervisor_name', 'team_lead']);
+      if (!dateCol || !manCol) {
+        showError('Required columns missing: at least "Date" and "Manpower Count" must exist.');
+        return;
+      }
+      rows = [];
+      for (const row of data) {
+        const manpowerRaw = row[manCol];
+        const manpower = (manpowerRaw && !isNaN(parseFloat(manpowerRaw))) ? parseFloat(manpowerRaw) : 0;
+        if (manpower === 0 && row[manCol] !== undefined && row[manCol] !== '') continue; // skip zero manpower rows? keep zero but allowed
+        const qtyRaw = qtyCol ? row[qtyCol] : '0';
+        const qty = (qtyRaw && !isNaN(parseInt(qtyRaw))) ? parseInt(qtyRaw) : 0;
+        const cost = manpower * RATE;
+        rows.push({
+          date: dateCol ? (row[dateCol] || '—') : '—',
+          customer: custCol ? (row[custCol] || '—') : '—',
+          po: poCol ? (row[poCol] || '—') : '—',
+          item: itemCol ? (row[itemCol] || '—') : '—',
+          qty: qty,
+          manpower: manpower,
+          supervisor: supCol ? (row[supCol] || '—') : '—',
+          cost: cost
+        });
+      }
+      if (rows.length === 0) showError('No valid data rows found (manpower missing or zero).');
+      renderDashboard();
+    },
+    error: (err) => { showLoading(false); showError('CSV parsing failed: '+err.message); }
+  });
+}
+
+function renderDashboard() {
+  const tw = rows.reduce((s, r) => s + r.manpower, 0);
+  const tc = rows.reduce((s, r) => s + r.cost, 0);
+  const tq = rows.reduce((s, r) => s + r.qty, 0);
+  const uniqueDates = [...new Set(rows.map(r => r.date).filter(d => d && d !== '—'))];
+  const avg = uniqueDates.length ? Math.round(tc / uniqueDates.length) : tc;
+  const allSups = new Set();
+  rows.forEach(r => {
+    if (r.supervisor && r.supervisor !== '—') {
+      r.supervisor.split('/').forEach(s => { const t = s.trim(); if(t) allSups.add(t); });
+    }
+  });
+  document.getElementById('mRecords').textContent = rows.length;
+  document.getElementById('mWorkers').textContent = tw;
+  document.getElementById('mCost').textContent = `₹${tc.toLocaleString('en-IN')}`;
+  document.getElementById('mQty').textContent = tq.toLocaleString('en-IN');
+  document.getElementById('mAvg').textContent = `₹${avg.toLocaleString('en-IN')}`;
+  document.getElementById('mSup').textContent = allSups.size;
+  document.getElementById('rowCount').innerHTML = `${rows.length} records loaded`;
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('dataTable').style.display = 'table';
+  document.getElementById('chartsRow').style.display = 'grid';
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = rows.map(r => `<tr><td>${r.date}</td><td>${r.customer}</td><td><span class="badge">${r.po}</span></td><td>${r.item}</td><td>${r.qty>0?r.qty.toLocaleString('en-IN'):'—'}</td><td>${r.manpower>0?r.manpower:'—'}</td><td>${r.supervisor}</td><td style="color:#f5a623">₹${r.cost.toLocaleString('en-IN')}</td></tr>`).join('');
+  // Cost by date (ALL dates)
+  const dc = {};
+  rows.forEach(r => { dc[r.date] = (dc[r.date] || 0) + r.cost; });
+  const allDates = Object.keys(dc).sort();
+  const costs = allDates.map(d => dc[d]);
+  if (chartDate) chartDate.destroy();
+  chartDate = new Chart(document.getElementById('chartDate'), {
+    type: 'bar',
+    data: { labels: allDates, datasets: [{ label: 'Cost (₹)', data: costs, backgroundColor: '#f5a623aa', borderColor: '#f5a623', borderWidth: 1 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `₹${ctx.raw.toLocaleString('en-IN')}` } } },
+      scales: { x: { ticks: { autoSkip: true, maxRotation: 45, minRotation: 45, color: '#aaa' }, grid: { display: false } },
+                y: { ticks: { callback: v => '₹' + (v/1000).toFixed(0) + 'k' } } } }
+  });
+  // Supervisor chart - dynamic colors
+  const supWork = {};
+  rows.forEach(r => {
+    const sups = r.supervisor.split('/').map(s => s.trim()).filter(s => s && s !== '—');
+    const share = sups.length ? r.manpower / sups.length : 0;
+    sups.forEach(s => { supWork[s] = (supWork[s] || 0) + share; });
+  });
+  const supLabels = Object.keys(supWork).filter(s => s);
+  const supData = supLabels.map(s => Math.round(supWork[s]));
+  const dynamicColors = supLabels.map((_, idx) => `hsl(${idx * 360 / supLabels.length}, 70%, 60%)`);
+  if (chartSup) chartSup.destroy();
+  chartSup = new Chart(document.getElementById('chartSup'), {
+    type: 'doughnut',
+    data: { labels: supLabels, datasets: [{ data: supData, backgroundColor: dynamicColors, borderWidth: 1 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { color: '#ccc', font: { size: 10 } } } } }
+  });
+  // Ticker adaptive speed
+  const tickerText = rows.map(r => `${r.date} | ${r.customer} | ${r.manpower} workers | ₹${r.cost.toLocaleString('en-IN')}`).join('     •     ');
+  const tickerSpan = document.getElementById('tickerText');
+  tickerSpan.textContent = tickerText;
+  const tickerDiv = document.getElementById('ticker');
+  tickerDiv.style.display = 'block';
+  const measureSpan = document.createElement('span');
+  measureSpan.style.cssText = 'visibility:hidden; white-space:nowrap; font-family:Roboto Mono; font-size:11px; position:absolute';
+  measureSpan.textContent = tickerText;
+  document.body.appendChild(measureSpan);
+  const textWidth = measureSpan.offsetWidth;
+  const containerWidth = tickerDiv.clientWidth;
+  const duration = Math.max(8, (textWidth / containerWidth) * 12);
+  tickerSpan.style.animation = `scroll ${duration}s linear infinite`;
+  measureSpan.remove();
+}
+
+// sample CSV & export
+document.getElementById('sampleCsvBtn').addEventListener('click', () => {
+  const sample = `Date,Customer,PO Number,Item,Qty,Manpower Count,Supervisor\n2025-04-01,Sharma Fabrics,PO-1001,Kurta,500,4,Ramesh\n2025-04-02,Gupta Exports,PO-1002,Shirt,320,6,Subham/Shahran\n2025-04-03,Anand Retail,PO-1003,Jeans,210,3,Anjali`;
+  const blob = new Blob([sample], {type: 'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sample_packaging_data.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+document.getElementById('exportReportBtn').addEventListener('click', () => {
+  if (!rows.length) { showError('No data to export.'); return; }
+  const headers = ['Date','Customer','PO','Item','Qty','Manpower','Supervisor','Cost'];
+  const csvRows = [headers.join(',')];
+  for (const r of rows) {
+    csvRows.push([r.date, r.customer, r.po, r.item, r.qty, r.manpower, r.supervisor, r.cost].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+  }
+  const blob = new Blob([csvRows.join('\n')], {type: 'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `cost_report_${new Date().toISOString().slice(0,19)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// upload handlers
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag'); if(e.dataTransfer.files[0]) parseCSV(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if(e.target.files[0]) parseCSV(e.target.files[0]); });
+
+// fix for initial empty state
+document.getElementById('emptyState').style.display = 'flex';
+</script>
+</body>
+</html>
